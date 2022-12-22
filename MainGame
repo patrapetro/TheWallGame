@@ -127,6 +127,7 @@ def game(wall, collective, descriptions,des, answer):
 
     if (datetime.datetime.now()-start).seconds > 300:   
         print("Sorry, time is up!")
+        answers_wrong(collective, des, answer)
 
 #SET VARIABLES - Describe the four different walls that the player needs to solve
 
