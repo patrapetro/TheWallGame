@@ -1,0 +1,274 @@
+#import modules
+import time
+import datetime
+
+
+#This function will print out what words are still remaining on the wall
+def print_wall(wall):
+    grouped = [wall[i:i+4] for i in range(0, len(wall), 4)]
+    for l in grouped:
+        print ("".join("{:<10}".format(x) for x in l))
+
+#This function will reveal the groups and connections if the player is getting frustrated
+def quitting_short(descriptions):
+    print()
+    print("Ok, quitter! Here are the groups that you failed to find:")
+    print()
+    print("Group 1:", descriptions[1], descriptions[0])
+    print()
+    print("Group 2:", descriptions[3], descriptions[2])
+    print()
+    print("Group 3:", descriptions[5], descriptions[4])
+    print()
+    print("Group 4:", descriptions[7], descriptions[6])
+    print()
+    print("Better luck next time!")
+
+#This function will determine if the guess is correct or not, and update the wall as appropriate if so
+def correct_guess(guess, wall, collective, descriptions):
+    q=False
+    r=False
+    if "quit" in guess.lower():
+        r=True
+        quitting_short(descriptions)
+    for i in collective:
+        if all(x in guess.upper() for x in i):
+            wall.remove(i[0])
+            wall.remove(i[1])
+            wall.remove(i[2])
+            wall.remove(i[3])
+            if len(lives)>0:
+                lives.remove(lives[0])
+            if len(lives)==0 and len(last_lives)>0:
+                #changed this line
+                last_lives.extend([4,5,6,7])
+            print()
+            print("well done! That is a group!")
+            print()
+            q=True
+    if q==False and r==False:
+        print()
+        print("Unfortunately that is not a group.")
+        print()
+        if len(lives)>1:
+            print("Try again!")
+            print()
+        if len(lives)==1:
+            last_lives.remove(last_lives[0])
+
+    if q==True and r==False and len(lives)>1:
+        print_wall(wall)
+        print()
+        print("Can you find another?")
+        print()
+
+    if q==True and r==False and len(lives)==1 and len(last_lives)>0:
+        print_wall(wall)
+
+
+#This function will be displayed at the end if the wall was solved
+def answers(collective, des, answer):
+    print("You solved the wall!")
+    print("Now can you find the connections?")
+    for i in range(4):
+        print("what is the connection in this group", collective[i])
+        guess=input()
+        if any(substring in guess for substring in answer[i]):
+            print("That is correct! The connection is", des[i])
+        else:
+            print("Unfortunately, that is not correct. The right answer was", des[i])
+
+#This function will be displayed if the wall was not solved
+def answers_wrong(collective, des, answer):
+    print("Even though you did not solved the wall, you can still try to find the connections!")
+    for i in range(4):
+        print("what is the connection this group", collective[i])
+        guess=input()
+        if any(substring in guess for substring in answer[i]):
+            print("That is correct! The connection is", des[i])
+        else:
+            print("Unfortunately, that is not correct. The right answer was", des[i])
+
+#This function runs the entire game from start to finish
+def game(wall, collective, descriptions,des, answer):
+    start = datetime.datetime.now()
+    print("Here is the wall!")
+    print()
+    print_wall(wall)
+    print()
+    guess=input("Can you find a group in the wall?")    
+    correct_guess(guess, wall, collective, descriptions)
+
+    while len(lives)>1 and(datetime.datetime.now()-start).seconds < 300:
+        if "quit" not in guess:
+            guess=input("You have {}s left".
+                format(300-(datetime.datetime.now()-start).seconds))    
+            correct_guess(guess, wall, collective, descriptions)
+        if "quit" in guess:
+            break
+
+    while len(lives)==1 and len(last_lives)>0 and (datetime.datetime.now()-start).seconds < 300:
+        print()
+        print("You have", len(last_lives), "more attempt(s) left")
+        print()
+        guess=input("Can you find the final connections? You have {}s left".
+            format(300-(datetime.datetime.now()-start).seconds))  
+        correct_guess(guess, wall, collective, descriptions)
+        if "quit" in guess:
+            break
+        if len(last_lives)> 4:
+            print()
+            answers(collective, des, answer)
+            break
+        
+    if len(last_lives)==0:
+        print("Sorry the wall has frozen!")
+        answers_wrong(collective, des, answer)
+
+    if (datetime.datetime.now()-start).seconds > 300:   
+        print("Sorry, time is up!")
+
+#SET VARIABLES - Describe the four different walls that the player needs to solve
+
+#Wall A
+wall_a=["YELLOW", "DWARF", "APPLE", "FOOL","FLAG", "BALM", "INDIGO", "BLUE","WILD", "GREEN", "BANANA", "TAPE","ORANGE", "BARON", "VIOLET", "PEAR"]
+group_1a=["APPLE","PEAR","BANANA","ORANGE"]
+group_1a_des="fruits"
+group_2a=["DWARF", "TAPE", "FLAG", "BARON"]
+group_2a_des="words that can be preceded by 'red' to make a phrase"
+group_3a=["INDIGO", "BLUE", "VIOLET", "GREEN"]
+group_3a_des="colours"
+group_4a=["YELLOW", "FOOL", "BALM", "WILD"]
+group_4a_des="first letter can be changed to make synonyms of placid"
+collective_a=(group_1a, group_2a, group_3a, group_4a)
+collective_descriptions_a=(group_1a, group_1a_des, group_2a, group_2a_des, group_3a, group_3a_des, group_4a, group_4a_des)
+des_a=(group_1a_des, group_2a_des, group_3a_des, group_4a_des)
+answers_a=(["fruit"], ["red"], ["colour"], ["mild","placid","calm","cool"])
+
+
+#Wall B
+wall_b=["MINIS", "MINUTE", "B", "SIXTH","OUT", "BRAVE", "SECOND", "QUIVER","FORTH", "HOUR", "FIRST", "BROCHET","DOWN", "THIRD", "DAY", "FIFTH"]
+group_1b=["SECOND","MINUTE","HOUR","DAY"]
+group_1b_des="units of time"
+group_2b=["B", "FORTH", "OUT", "DOWN"]
+group_2b_des="things that can be followed by 'right' to make a word"
+group_3b=["FIRST", "THIRD", "FIFTH", "SIXTH"]
+group_3b_des="ordinal numbers"
+group_4b=["MINIS", "BRAVE", "QUIVER", "BROCHET"]
+group_4b_des="one letter can be changed to make a type of musical note"
+collective_b=(group_1b, group_2b, group_3b, group_4b)
+collective_descriptions_b=(group_1b, group_1b_des, group_2b, group_2b_des, group_3b, group_3b_des, group_4b, group_4b_des)
+des_b=(group_1b_des, group_2b_des, group_3b_des, group_4b_des)
+answers_b=(["time"], ["right"], ["number","ordinal"], ["music", "note"] )
+
+
+#Wall C
+wall_c=["MAGE", "MOUNT", "ISA", "WARLOCK","BAT", "HENTRAP", "PLUS", "LINO","FACE", "WIZARD", "ACT", "POLARED","SORCERER", "PASS", "HOME", "WITCH"]
+group_1c=["WARLOCK","WIZARD","SORCERER","WITCH"]
+group_1c_des="people who do magic"
+group_2c=["HENTRAP", "LINO", "ACT", "POLARED"]
+group_2c_des="anagrams of types of felines"
+group_3c=["MOUNT", "PLUS", "FACE", "PASS"]
+group_3c_des="words that can follow 'sur' to make new words"
+group_4c=["MAGE", "ISA", "BAT", "HOME"]
+group_4c_des="one letter can be added to create members of the Simpsons family"
+collective_c=(group_1c, group_2c, group_3c, group_4c)
+collective_descriptions_c=(group_1c, group_1c_des, group_2c, group_2c_des, group_3c, group_3c_des, group_4c, group_4c_des)
+des_c=(group_1c_des, group_2c_des, group_3c_des, group_4c_des)
+answers_c=(["magic"], ["cat", "feline", "felid", "anagram"], ["sur"], ["simpsons"] )
+
+#Wall D
+wall_d=["BART", "PART", "START", "DART","BALL", "BOURNE", "FRISBEE", "SIDE","WIN", "FRONT", "EARNS", "SPEAR","BEAT", "ENT", "BANE", "RULE"]
+group_1d=["DART","BALL","FRISBEE","SPEAR"]
+group_1d_des="things you throw"
+group_2d=["BART", "BOURNE", "WIN", "BANE"]
+group_2d_des="the second syllable of Australian capital cities"
+group_3d=["START", "SIDE", "FRONT", "BEAT"]
+group_3d_des="words that can follow 'up' to make new words"
+group_4d=["PART", "EARNS", "ENT", "RULE"]
+group_4d_des="anagrams of things used to catch prey"
+collective_d=(group_1d, group_2d, group_3d, group_4d)
+collective_descriptions_d=(group_1d, group_1d_des, group_2d, group_2d_des, group_3d, group_3d_des, group_4d, group_4d_des)
+des_d=(group_1d_des, group_2d_des, group_3d_des, group_4d_des)
+answers_d=(["throw"], ["capital", "city", "cities"], ["up"], ["anagram", "catch", "prey", "trap"] )
+
+
+#Game description and introduction
+print("Welcome to the connecting wall!")
+print("The connecting wall consists of 16 words.")
+print()
+print("These 16 words can be arranged into 4 groups of 4.")
+print("The words in each group will all have something in common.")
+print()
+print("If you are confused and would like some examples, press 'e' for example, followed by the enter key.")
+eg=input("Otherwise, press enter to continue.")
+
+if eg.lower()=="e":
+    print()
+    print("One example of a group might be 'CHICKEN' 'BEEF' 'PORK' 'TURKEY'.")
+    print("These words are all different types of meat.")
+    eg=input("Press 'e' for another example, followed by enter.")
+    if eg.lower()=="e":
+        print()
+        print()
+        print("Or it might be a bit harder. Another example could be 'DENNIS', 'ROLF', 'JOCKEY', 'SOLO'.")
+        print("If you change the first letter of all of these words you make a sport - TENNIS, GOLF, HOCKEY, POLO.")
+        eg=input("Press 'e' for another example, followed by enter. Or just press enter to get on with it.")
+    if eg.lower()=="e":
+        print()
+        print()
+        print("Another example might be 'DOWN', 'BLIND', 'RE', 'DARK'.")
+        print("You can add 'SIDE' to all of these to make a word or a phrase.")
+    time.sleep(1)
+    print()
+    print("Are you starting to get the idea? I also like anagrams, by the way, so there might be a one or two of those in there.")
+    print()
+    input("Press enter to continue.")
+    print()
+
+print()
+print("There are four different walls for you to complete: Wall A, Wall B, Wall C and Wall D.")
+print("When a wall appears, you will have 5 minutes to complete it.")
+input("Press enter to continue.")
+print()
+print("Once you think you have spotted a group of 4, type out each word in any order, separated by a space and press enter.")
+print("After you have identified the first two groups, you will only have three more attempts to find the final two before the wall freezes.")
+input("Press enter to continue.")
+print()
+print("There are two more things you need to know:")
+print("1. If you are unable to find all the groups, you will still have an opportunity to guess what the connections are at the end.")
+print()
+print("2. If at any time you are getting frustrated and would like to give up and see the answer, you may type 'I am a quitter' and press enter.")
+print()
+
+for i in range(5):
+
+    lives=[1,2,3]
+    last_lives=[1,2,3]
+
+    print("Alright, it's time for a new wall!")
+    entry=input("Press the letter of the wall you would like to attempt (eg a, b, c or d), followed by enter. Good luck.")
+    if entry.lower()=="a":
+        print()
+        game(wall_a, collective_a, collective_descriptions_a, des_a, answers_a)
+
+    elif entry.lower()=="b":
+        print()
+        game(wall_b, collective_b, collective_descriptions_b, des_b, answers_b)
+
+    elif entry.lower()=="c":
+        print()
+        game(wall_c, collective_c, collective_descriptions_c, des_c, answers_c)
+
+    elif entry.lower()=="d":
+        print()
+        game(wall_d, collective_d, collective_descriptions_d, des_d, answers_d)
+
+    else:
+        print("That's not a, b, c or d! Let's try that one again.")
+    print()
+
+print("The end! I hope you enjoyed the game.")
+
+
+
